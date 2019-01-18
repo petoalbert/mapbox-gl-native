@@ -360,6 +360,10 @@ void MapWindow::mousePressEvent(QMouseEvent *ev)
 {
     m_lastPos = ev->localPos();
 
+    for (auto x : m_map->queryRenderedFeatures(ev->localPos())) {
+	qDebug() << x.properties;
+    }
+
     if (ev->type() == QEvent::MouseButtonPress) {
         if (ev->buttons() == (Qt::LeftButton | Qt::RightButton)) {
             changeStyle();

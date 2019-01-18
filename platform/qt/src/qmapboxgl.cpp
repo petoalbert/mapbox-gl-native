@@ -1909,3 +1909,63 @@ bool QMapboxGLPrivate::setProperty(const PropertySetter& setter, const QString& 
 
     return true;
 }
+
+std::vector<mbgl::Feature> QMapboxGLPrivate::queryRenderedFeatures(
+		const mbgl::ScreenCoordinate& point,
+		const mbgl::RenderedQueryOptions& options) const {
+    return m_mapRenderer->queryRenderedFeatures(point, options);
+}
+
+QList<QMapboxGLFeature> QMapboxGL::queryRenderedFeatures(const QPointF& point, const QRenderedQueryOptions& options) {
+
+    using namespace mbgl::style;
+    using namespace mbgl::style::conversion;
+
+    // TODO: What to call this?
+    mbgl::RenderedQueryOptions o;
+
+    if (options.layers.canConvert<QStringList>()) {
+	auto layers = options.layers.value<QStringList>();
+	o.layerIDs = std::vector<std::string>();
+	for (auto& layerId : layers) {
+	    o.layerIDs->push_back(layerId.toStdString());
+	}
+    }
+
+    if (options.filter.isValid()) {
+	Error error;
+	o.filter = convert<Filter>(options.filter, error);
+	if (!o.filter) {
+	    qWarning() << "Error parsing filter:" << error.message.c_str();
+        }
+    }
+
+    auto mbglFeatures = d_ptr->queryRenderedFeatures(
+		    mbgl::ScreenCoordinate {point.x(), point.y()},
+		    o);
+
+    QList<QMapboxGLFeature> features;
+
+    for (auto f : mbglFeatures) {
+
+	QVariantMap properties;
+	for (auto p : f.properties) {
+	    properties.insert(
+		QString::fromStdString(p.first),
+		QVariantFromValue(p.second));
+	}
+
+        QVariant id;
+	if (f.id) {
+            f.id.value().match(
+	        [&id](uint64_t val) { id = QVariant(static_cast<qulonglong>(val)); },
+		[&id](int64_t val) { id = QVariant(static_cast<qlonglong>(val)); },
+		[&id](double val) { id = QVariant(val); },
+		[&id](std::string val) { id = QString::fromStdString(val); });
+	}
+
+	features.append(QMapboxGLFeature {properties, id});
+    }
+
+    return features;
+}

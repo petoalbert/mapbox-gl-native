@@ -9,6 +9,9 @@
 #include <QSize>
 #include <QString>
 #include <QStringList>
+#include <QList>
+
+#include <unordered_map>
 
 #include <functional>
 
@@ -96,6 +99,16 @@ struct Q_MAPBOXGL_EXPORT QMapboxGLCameraOptions {
     QVariant zoom;    // double
     QVariant angle;   // double
     QVariant pitch;   // double
+};
+
+struct Q_MAPBOXGL_EXPORT QRenderedQueryOptions {
+    QVariant layers;
+    QVariant filter;
+};
+
+struct Q_MAPBOXGL_EXPORT QMapboxGLFeature {
+    QVariantMap properties;
+    QVariant id;
 };
 
 class Q_MAPBOXGL_EXPORT QMapboxGL : public QObject
@@ -249,6 +262,10 @@ public:
     void createRenderer();
     void destroyRenderer();
     void setFramebufferObject(quint32 fbo, const QSize &size);
+
+    QList<QMapboxGLFeature> queryRenderedFeatures(
+	const QPointF&,
+	const QRenderedQueryOptions& options = QRenderedQueryOptions());
 
 public slots:
     void render();

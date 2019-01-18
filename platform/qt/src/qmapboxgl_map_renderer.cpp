@@ -93,3 +93,9 @@ void QMapboxGLMapRenderer::setObserver(std::shared_ptr<mbgl::RendererObserver> o
 {
     m_renderer->setObserver(observer.get());
 }
+
+std::vector<mbgl::Feature> QMapboxGLMapRenderer::queryRenderedFeatures(
+		const mbgl::ScreenCoordinate& point,
+		const mbgl::RenderedQueryOptions& options) const {
+    return m_renderer->queryRenderedFeatures(point, options);
+}
