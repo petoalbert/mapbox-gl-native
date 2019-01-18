@@ -320,7 +320,7 @@ MGL_EXPORT IB_DESIGNABLE
     to provide users with the option to disable anonymous usage and location
     sharing (telemetry). If this view is hidden, you must implement this
     setting elsewhere in your app or via `Settings.bundle`. See our
-    <a href="https://www.mapbox.com/ios-sdk/#telemetry_opt_out">website</a> for
+    <a href="https://www.mapbox.com/help/how-mapbox-works/attribution/#mapbox-maps-sdk-for-ios">website</a> for
     implementation help.
  */
 @property (nonatomic, readonly) UIButton *attributionButton;
