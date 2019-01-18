@@ -832,6 +832,38 @@ void QMapboxGL::jumpTo(const QMapboxGLCameraOptions& camera)
 }
 
 /*!
+    Transitions to the \a camera options .
+*/
+void QMapboxGL::easeTo(const QMapboxGLCameraOptions& camera, quint64 durationMillis)
+{
+    mbgl::CameraOptions mbglCamera;
+    if (camera.center.isValid()) {
+        const Coordinate center = camera.center.value<Coordinate>();
+        mbglCamera.center = mbgl::LatLng { center.first, center.second };
+    }
+    if (camera.anchor.isValid()) {
+        const QPointF anchor = camera.anchor.value<QPointF>();
+        mbglCamera.anchor = mbgl::ScreenCoordinate { anchor.x(), anchor.y() };
+    }
+    if (camera.zoom.isValid()) {
+        mbglCamera.zoom = camera.zoom.value<double>();
+    }
+    if (camera.angle.isValid()) {
+        mbglCamera.angle = camera.angle.value<double>();
+    }
+    if (camera.pitch.isValid()) {
+        mbglCamera.pitch = camera.pitch.value<double>();
+    }
+
+    mbglCamera.padding = d_ptr->margins;
+
+    auto duration = mbgl::Milliseconds(durationMillis);
+    mbgl::AnimationOptions animation(duration);
+
+    d_ptr->mapObj->easeTo(mbglCamera, animation);
+}
+
+/*!
     \property QMapboxGL::bearing
     \brief the map bearing in degrees.
 
@@ -1925,46 +1957,38 @@ QList<QMapboxGLFeature> QMapboxGL::queryRenderedFeatures(const QPointF& point, c
     mbgl::RenderedQueryOptions o;
 
     if (options.layers.canConvert<QStringList>()) {
-	auto layers = options.layers.value<QStringList>();
-	o.layerIDs = std::vector<std::string>();
-	for (auto& layerId : layers) {
-	    o.layerIDs->push_back(layerId.toStdString());
-	}
+        auto layers = options.layers.value<QStringList>();
+        o.layerIDs = std::vector<std::string>();
+        for (auto& layerId : layers) {
+            o.layerIDs->push_back(layerId.toStdString());
+        }
     }
 
     if (options.filter.isValid()) {
-	Error error;
-	o.filter = convert<Filter>(options.filter, error);
-	if (!o.filter) {
-	    qWarning() << "Error parsing filter:" << error.message.c_str();
+        Error error;
+        o.filter = convert<Filter>(options.filter, error);
+        if (!o.filter) {
+            qWarning() << "Error parsing filter:" << error.message.c_str();
         }
     }
 
     auto mbglFeatures = d_ptr->queryRenderedFeatures(
-		    mbgl::ScreenCoordinate {point.x(), point.y()},
-		    o);
+            mbgl::ScreenCoordinate {point.x(), point.y()},
+            o);
 
     QList<QMapboxGLFeature> features;
 
     for (auto f : mbglFeatures) {
 
-	QVariantMap properties;
-	for (auto p : f.properties) {
-	    properties.insert(
-		QString::fromStdString(p.first),
-		QVariantFromValue(p.second));
-	}
+        QVariantMap properties;
+        for (auto p : f.properties) {
+            properties.insert(
+                    QString::fromStdString(p.first),
+                    QVariantFromValue(p.second));
+        }
 
         QVariant id;
-	if (f.id) {
-            f.id.value().match(
-	        [&id](uint64_t val) { id = QVariant(static_cast<qulonglong>(val)); },
-		[&id](int64_t val) { id = QVariant(static_cast<qlonglong>(val)); },
-		[&id](double val) { id = QVariant(val); },
-		[&id](std::string val) { id = QString::fromStdString(val); });
-	}
-
-	features.append(QMapboxGLFeature {properties, id});
+        features.append(QMapboxGLFeature {properties, id});
     }
 
     return features;

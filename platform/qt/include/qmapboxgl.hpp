@@ -205,6 +205,8 @@ public:
 
     void jumpTo(const QMapboxGLCameraOptions&);
 
+    void easeTo(const QMapboxGLCameraOptions&, quint64 durationMillis);
+
     void setGestureInProgress(bool inProgress);
 
     void setTransitionOptions(qint64 duration, qint64 delay = 0);
