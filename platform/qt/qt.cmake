@@ -122,6 +122,8 @@ find_package(Qt5Sql      REQUIRED)
 # mode. Qt5 will take care of translating the desktop
 # version of OpenGL to ES2.
 add_definitions("-DMBGL_USE_GLES2")
+add_definitions("-Wno-maybe-uninitialized")
+add_definitions("-Wno-format-truncation")
 
 set(MBGL_QT_CORE_LIBRARIES
     PUBLIC Qt5::Core
